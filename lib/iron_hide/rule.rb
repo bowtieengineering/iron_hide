@@ -23,7 +23,8 @@ module IronHide
     # @return [Array<IronHide::Rule>]
     def self.find(user, action, resource)
       cache       = IronHide.configuration.memoizer.new
-      ns_resource = "#{IronHide.configuration.namespace}::#{resource.class.name}"
+      resource_class_name = resource.is_a?(Class) ? resource.name : resource.class.name
+      ns_resource = "#{IronHide.configuration.namespace}::#{resource_class_name}"
       storage.where(resource: ns_resource, action: action).map do |json|
         new(user, resource, json, cache)
       end
@@ -50,6 +51,39 @@ module IronHide
       end
     end
 
+    # Used to turn the rules into scopes
+    # @return [Array<IronHide::Scope>]
+    # @param 
+    #
+    def self.scope(user, action, resource)
+      all_resources = resource.to_a
+      results = all_resources.keep_if do |r|
+        self.allow? user, "read", r
+      end
+      results
+      #IronHide::ScopeBuilder.new(find(user, action, resource))
+        # find the full scope of the conditions
+        # scope = rule.scope
+
+        # # Put the scope into the array if it isn't already there
+        # rval.push(scope) unless rval.includes? scope
+
+        # rval
+      # end
+
+      #IronHide::Scope.return_records(all_scopes)
+    end
+
+    # Scope out each conditional
+    # @see IronHide::Scope
+    # @return [IronHide::Scope]
+    # @param conditions [Array<IronHide::Condition>]
+    # @param user [Object]
+    # @param resource [Object]
+    # def scope
+    #   IronHide::Scope.build_scope(conditions,user,resource)
+    # end
+
     # An abstraction over the storage of the rules
     # @see IronHide::Storage
     # @return [IronHide::Storage]
@@ -69,4 +103,5 @@ module IronHide
 
     alias_method :deny?, :explicit_deny?
   end
+
 end

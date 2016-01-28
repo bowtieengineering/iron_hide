@@ -2,9 +2,13 @@ require 'set'
 
 module IronHide
   class Condition
+    EQUAL = 'equal'.freeze
+    NOT_EQUAL = 'not_equal'.freeze
+    RESOURCE = 'resource'.freeze
+    USER = 'user'.freeze
     VALID_TYPES = {
-      'equal'=> :EqualCondition,
-      'not_equal'=> :NotEqualCondition
+      EQUAL => :EqualCondition,
+      NOT_EQUAL => :NotEqualCondition
     }.freeze
 
     # @param params [Hash] It has a single key, which is the conditional operator
@@ -28,7 +32,7 @@ module IronHide
       #=> :equal, { key: val, key: val }
       #
       # See: http://ruby-doc.org/core-1.9.3/Class.html#method-i-allocate
-      klass = VALID_TYPES.fetch(type){ raise InvalidConditional, "#{type} is not valid"}
+      klass = VALID_TYPES.fetch(type){ raise InvalidConditional, "#{type} is not valid #{params} | #{VALID_TYPES}"}
       cond  = IronHide.const_get(klass).allocate
       cond.send(:initialize, conditionals, cache)
       cond
@@ -98,14 +102,47 @@ module IronHide
         if expression?(el)
           cache.fetch(el) {
             type, *ary  = el.split('::')
-            if type == 'user'
+            if type == USER
               Array(ary.inject(user) do |rval, attr|
                 rval.freeze.public_send(attr)
               end)
-            elsif type == 'resource'
+            elsif type == RESOURCE
               Array(ary.inject(resource) do |rval, attr|
                 rval.freeze.public_send(attr)
               end)
+            else
+              raise "Expected #{type} to be 'resource' or 'user'"
+            end
+          }
+        else
+          el
+        end
+      end
+    end
+    
+    def evaluate_scope(expression, user, resource)
+      Array(expression).flat_map do |el|
+        if expression?(el)
+          cache.fetch(el) {
+            type, *ary  = el.split('::')
+            if type == USER
+                Array(ary.inject(user) do |rval, attr|
+                  rval.freeze.public_send(attr)
+                end)
+            elsif type == RESOURCE
+                # ["resource::location::organization_id"]
+              results = ary.inject(resource) do |query,array|
+                # table = Arel::Table.new(resource.table_name)
+
+                Hash[query,array]
+                # temp_table = Arel::Table.new(array.classify.constantize.table_name)
+                # query = query.join(temp_table).on(table[:id].eq(temp_table[:"#{resource.name.downcase}_id"]))
+              end
+              results
+              # Device.includes(:location).where(locations: { organization_id: Organization.first }).first
+              # Array(ary.inject(resource) do |rval, attr|
+              #   rval.freeze.public_send(attr)
+              # end)
             else
               raise "Expected #{type} to be 'resource' or 'user'"
             end
@@ -138,6 +175,21 @@ module IronHide
         end
       end
     end
+    # Returns an array of scoping information
+    def scope(user, resource)
+      # with_error_handling do
+      a = []
+      conditionals.each do |left,right|
+        left_result = evaluate_scope(left,user,resource)
+        right_result = evaluate_scope(right,user,resource)
+        if left_result.first.is_a? Arel::Attributes::Attribute
+          a << [EqualCondition::EQUAL,left_result,right_result]
+        else
+          a << [EqualCondition::EQUAL,right_result,left_result]
+        end
+      end
+      a
+    end
   end
 
   # @api private
@@ -148,6 +200,20 @@ module IronHide
           !((evaluate(left, user, resource) & evaluate(right, user, resource)).size > 0)
         end
       end
+    end
+    def scope(user, resource)
+      # with_error_handling do
+      a = []
+      conditionals.each do |left,right|
+        left_result = evaluate_scope(left,user,resource)
+        right_result = evaluate_scope(right,user,resource)
+        if left_result.first.is_a? Arel::Attributes::Attribute
+          a << [NotEqualCondition::NOT_EQUAL,left_result,right_result]
+        else
+          a << [NotEqualCondition::NOT_EQUAL,right_result,left_result]
+        end
+      end
+      a
     end
   end
 end

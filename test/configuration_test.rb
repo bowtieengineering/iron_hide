@@ -1,13 +1,13 @@
-require 'spec_helper'
+require 'test_helper'
 
 describe IronHide::Configuration do
   describe "defaults" do
     it "initializes with default configuration variables" do
       configuration = IronHide::Configuration.new
 
-      expect(configuration.adapter).to eq :file
-      expect(configuration.namespace).to eq 'com::IronHide'
-      expect(configuration.json).to eq nil
+      assert_equal configuration.adapter, :file
+      assert_equal configuration.namespace, 'com::IronHide'
+      assert_equal configuration.json, nil
     end
   end
 
@@ -17,11 +17,11 @@ describe IronHide::Configuration do
 
       configuration.add_configuration(var1: :default1, var2: :default2, var3: nil)
 
-      expect(configuration.var1).to eq :default1
-      expect(configuration.var2).to eq :default2
+      assert_equal configuration.var1, :default1
+      assert_equal configuration.var2, :default2
 
       configuration.var3 = :nondefault
-      expect(configuration.var3).to eq :nondefault
+      assert_equal configuration.var3, :nondefault
     end
   end
 end

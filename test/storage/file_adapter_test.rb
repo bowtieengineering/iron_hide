@@ -1,20 +1,22 @@
-require 'spec_helper'
+require 'test_helper'
 
 describe IronHide::Storage::FileAdapter do
-  context "when using FileAdapter" do
-    before(:all) do
-      IronHide.reset
+  describe "when using FileAdapter" do
+    def setup
       IronHide.config do |config|
         config.adapter = :file
-        config.json    = File.join('spec','rules.json')
+        config.json    = File.join('test','rules.json')
       end
+      @storage = IronHide.storage
     end
 
-    let(:storage) { IronHide.storage }
 
+    def teardown
+      IronHide.reset
+    end
     describe "#adapter" do
       it "returns a FileAdapter" do
-        expect(storage.adapter).to be_instance_of(IronHide::Storage::FileAdapter)
+        assert_instance_of IronHide::Storage::FileAdapter, @storage.adapter
       end
     end
 
@@ -23,18 +25,18 @@ describe IronHide::Storage::FileAdapter do
       let(:example1) do
         [
           {
-            "resource" => "com::test::TestResource",
+            "resource" => "com::test::Resource",
             "action" => [ "read", "update" ],
-            "description" => "Read/update access for TestResource.",
+            "description" => "Read/update access for Resource.",
             "effect"      => "allow",
             "conditions"  => [
               {"equal"=>{"user::user_role_ids"=>["1", "2"]}}
             ]
           },
           {
-            "resource" => "com::test::TestResource",
+            "resource" => "com::test::Resource",
             "action" => [ "read" ],
-            "description" => "Read access for TestResource.",
+            "description" => "Read access for Resource.",
             "effect"      => "deny",
             "conditions"  => [
               {"equal"=>{"user::user_role_ids"=>["5"]}}
@@ -43,22 +45,22 @@ describe IronHide::Storage::FileAdapter do
         ]
       end
 
-      context "example1" do
+      describe "example1" do
         it "returns all the JSON rules for a specified action/resource" do
-          json = storage.where(
-            resource: "com::test::TestResource",
+          json = @storage.where(
+            resource: "com::test::Resource",
             action: "read")
 
-          expect(json).to eq(example1)
+          assert_equal example1, json, "#{IronHide.storage.adapter.rules}"
         end
       end
 
       let(:example2) do
         [
           {
-            "resource" => "com::test::TestResource",
+            "resource" => "com::test::Resource",
             "action" => [ "read", "update" ],
-            "description" => "Read/update access for TestResource.",
+            "description" => "Read/update access for Resource.",
             "effect"      => "allow",
             "conditions"  => [
               {"equal"=>{"user::user_role_ids"=>["1", "2"]}}
@@ -66,22 +68,22 @@ describe IronHide::Storage::FileAdapter do
           }
         ]
       end
-      context "example2" do
+      describe "example2" do
         it "returns all the JSON rules for a specified action/resource" do
-          json = storage.where(
-            resource: "com::test::TestResource",
+          json = @storage.where(
+            resource: "com::test::Resource",
             action: "update")
 
-          expect(json).to eq(example2)
+          assert_equal example2, json, "#{IronHide.storage.adapter.rules}"
         end
       end
 
       let(:example3) do
         [
           {
-            "resource" => "com::test::TestResource",
+            "resource" => "com::test::Resource",
             "action"=> [ "delete" ],
-            "description"=> "Delete access for TestResource",
+            "description"=> "Delete access for Resource",
             "effect"=> "allow",
             "conditions"=> [
               {
@@ -93,13 +95,13 @@ describe IronHide::Storage::FileAdapter do
           }
         ]
       end
-      context "example3" do
+      describe "example3" do
         it "returns all the JSON rules for a specified action/resource" do
-          json = storage.where(
-            resource: "com::test::TestResource",
+          json = @storage.where(
+            resource: "com::test::Resource",
             action: "delete")
 
-          expect(json).to eq(example3)
+          assert_equal example3, json, "#{IronHide.storage.adapter.rules}"
         end
       end
     end

@@ -1,0 +1,73 @@
+[
+  {
+    "resource": "com::test::Resource",
+    "action": ["read", "update"],
+    "description": "Read/update access for Resource.",
+    "effect": "allow",
+    "conditions": [
+      {
+        "equal": {
+          "user::user_role_ids": ["1", "2"]
+        }
+      }
+    ]
+  },
+  {
+    "resource": "com::test::Resource",
+    "action": ["delete"],
+    "description": "Delete access for Resource",
+    "effect": "allow",
+    "conditions": [
+      {
+        "equal": {
+          "user::user_role_ids": ["1"]
+        }
+      }
+    ]
+  },
+  {
+    "resource": "com::test::Resource",
+    "action": ["read"],
+    "description": "Read access for Resource.",
+    "effect": "deny",
+    "conditions": [
+      {
+        "equal": {
+          "user::user_role_ids": ["5"]
+        }
+      }
+    ]
+  },
+  {
+    "resource": "com::test::Resource",
+    "action": ["index"],
+    "description": "Index access for Resource.",
+    "effect": "allow",
+    "conditions": [
+      {
+        "equal": {
+          "user::manager_id": ["resource::manager_id"],
+          "user::manager_id": ["resource::location::manager_id"]
+        }
+      },
+      {
+        "not_equal": {
+          "resource::id": ["1234"]
+        }
+      }
+    ]
+  },
+  {
+    "resource": "com::test::Resource",
+    "action": ["index"],
+    "description": "Index access for Resource.",
+    "effect": "deny",
+    "conditions": [
+      {
+        "equal": {
+          "user::manager_id": ["resource::manager_id"]
+        }
+      }
+    ]
+  }
+]
