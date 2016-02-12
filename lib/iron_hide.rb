@@ -15,6 +15,7 @@ module IronHide
     # @return [true] if authorization succeeds
     #
     def authorize!(user, action, resource)
+      @_iron_hide_policy_authorized = true
       unless can?(user, action, resource)
         raise AuthorizationError
       end
@@ -61,6 +62,18 @@ module IronHide
     # @return [void]
     def reset
       @storage = nil
+    end
+
+    def iron_hide_policy_authorized?
+      !!@_iron_hide_policy_authorized
+    end
+
+    def verify_authorized
+      raise AuthorizationNotPerformedError, self.class unless iron_hide_policy_authorized?
+    end
+
+    def skip_authorization
+      @_iron_hide_policy_authorized = true
     end
   end
 end

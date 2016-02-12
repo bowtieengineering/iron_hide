@@ -15,4 +15,8 @@ module IronHide
   #
   class InvalidConditional < IronHideError ; end
 
+  # Exception raised when authorization is not performed, usually used
+  # as an 'after_action' filter to prevent programmer error in forgetting
+  # to call {#authorize!} or {#skip_authorization}
+  class AuthorizationNotPerformedError < IronHideError ; end
 end

@@ -119,30 +119,31 @@ module IronHide
         end
       end
     end
-    
-    def evaluate_scope(expression, user, resource)
-      Array(expression).flat_map do |el|
+    # Not implemented at this moment, needs work
+    def evaluate_scope(expression, expression2, user, resource)
+      user_results = []
+      resource_results = []
+      [expression,expression].each do |el|
         if expression?(el)
           cache.fetch(el) {
             type, *ary  = el.split('::')
             if type == USER
-                Array(ary.inject(user) do |rval, attr|
+              user_results.push(ary.inject(user) do |rval, attr|
                   rval.freeze.public_send(attr)
                 end)
             elsif type == RESOURCE
                 # ["resource::location::organization_id"]
-              results = ary.inject(resource) do |query,array|
-                # table = Arel::Table.new(resource.table_name)
-
-                Hash[query,array]
-                # temp_table = Arel::Table.new(array.classify.constantize.table_name)
-                # query = query.join(temp_table).on(table[:id].eq(temp_table[:"#{resource.name.downcase}_id"]))
+              results = resource
+              len = ary.length - 1
+              len.times do |n|
+                tmp = ary.pop
+                case ary.length
+                when 1
+                  resource_results.push [tmp, ary.pop]
+                else
+                  resource_results[0] = resource_results.first.joins(tmp.to_sym).where
+                end
               end
-              results
-              # Device.includes(:location).where(locations: { organization_id: Organization.first }).first
-              # Array(ary.inject(resource) do |rval, attr|
-              #   rval.freeze.public_send(attr)
-              # end)
             else
               raise "Expected #{type} to be 'resource' or 'user'"
             end
@@ -151,6 +152,7 @@ module IronHide
           el
         end
       end
+      results.joins(tmp.to_sym).where(last => user_results)
     end
 
     def expression?(expression)
