@@ -23,7 +23,7 @@ module IronHide
     # @return [Array<IronHide::Rule>]
     def self.find(user, action, resource)
       cache       = IronHide.configuration.memoizer.new
-      resource_class_name = resource.is_a?(Class) ? resource.name : resource.class.name
+      resource_class_name = resource.is_a?(Module) ? resource.name : resource.class.name
       ns_resource = "#{IronHide.configuration.namespace}::#{resource_class_name}"
       storage.where(resource: ns_resource, action: action).map do |json|
         new(user, resource, json, cache)
