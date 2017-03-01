@@ -70,12 +70,4 @@ describe IronHide do
     IronHide.reset
   end
 
-  def test_scope_returns_scoped_resources
-    @resource = Resource.new("643243")
-    @resource2 = Resource.new("1234")
-    #assert_instance_of ActiveRecord::Relation, IronHide.scope(user,resource)
-    assert_includes IronHide.scope(user,Resource), @resource
-    refute_includes IronHide.scope(user,Resource), @resource2
-
-  end
 end

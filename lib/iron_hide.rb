@@ -5,8 +5,6 @@ require 'iron_hide/rule'
 require 'iron_hide/condition'
 require 'iron_hide/storage'
 require 'iron_hide/configuration'
-require 'iron_hide/scope_builder'
-require 'iron_hide/obligation_scope'
 
 module IronHide
   class << self
@@ -35,9 +33,9 @@ module IronHide
     # @return [ActiveRecord::Relation]
     # @param user [Object]
     # @param resource [Object]
-    def scope(user, resource)
-      IronHide::Rule.scope(user, "index", resource)
-    end
+    # def scope(user, resource)
+    #   IronHide::Rule.scope(user, "index", resource)
+    # end
     # @return [IronHide::Storage]
     def storage
       @storage ||= IronHide::Storage.new(configuration.adapter)
